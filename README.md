@@ -1,7 +1,7 @@
 # NetSquid_coexisting_Raman_noise
 
-Refer to the **Raman Sim Documentation** file for full documentation of this repo.
-Refer to the pre-print, "**Simulating Raman Scattering Impairments with Depolarization Noise in Quantum-Classical Links**" for a full theoretical explanation of the methods employed in the code.
+Refer to the *Raman Sim Documentation* file for full documentation of this repo.
+Refer to the pre-print, "*Simulating Raman Scattering Impairments with Depolarization Noise in Quantum-Classical Links*" for a full theoretical explanation of the methods employed in the code.
 
 ## Overview
 This code simulates quantum communication experiments utilizing coexistence with classical signals, such as in fiber optic links carrying both quantum and classical data. This is modelled using the depolarization channel.
