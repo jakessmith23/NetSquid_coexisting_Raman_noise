@@ -105,7 +105,7 @@ if __name__ == "__main__":
     raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], WAVELENGTHS, DETECTION_WINDOW, RBW)
 
     # Hardware parameters (defined elsewhere in full code)
-    from hardware_config import hardware_params  
+    from entangled_hardware_config import hardware_params  
     
 
     # Fidelity simulation
