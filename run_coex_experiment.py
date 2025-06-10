@@ -1,7 +1,7 @@
 import import_coexisting_direct_transmission as direct
 import import_coexisting_entanglement as ent
 import import_coexisting_teleportation as tele
-from hardware_config import hardware_params  
+from entangled_hardware_config import hardware_params  
 
 
 # Citations:
@@ -9,7 +9,7 @@ from hardware_config import hardware_params
 
 if __name__ == "__main__":
   ###### >> To run coexisting direct transmission experiment
-  #depolarized_fidelity, depolarized_state = direct.run_coex_direct_transm_experiment(incident_raman_photons_per_s=0, quantum_photons_incident_per_s=1, detector_gate_time_s=1, random_seed = 1, ket_state="0", verbose=True)
+  depolarized_fidelity, depolarized_state = direct.run_coex_direct_transm_experiment(incident_raman_photons_per_s=0, quantum_photons_incident_per_s=1, detector_gate_time_s=1, random_seed = 1, ket_state="0", verbose=True)
 
 
   ###### >> To run coexisting entanglement distribution experiment
