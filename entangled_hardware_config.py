@@ -1,3 +1,4 @@
+# [1] Thomas, Jordan; Yeh, Fei; Chen, Jim; Mambretti, Joe; Kohlert, Scott; Kanter, Gregory; et al. (2024). Supplementary document for Quantum Teleportation Coexisting with Classical Communications in Optical Fiber - 7260233.pdf. Optica Publishing Group. Journal contribution.
 hardware_params = {
   'alice_fibre_raman_photons_per_det_window' : 10**5 * 1e-9 * .5, # [photons / det_window]
   'bob_fibre_raman_photons_per_det_window' : 10**5 * 1e-9 * .5, # [photons / det_window]
