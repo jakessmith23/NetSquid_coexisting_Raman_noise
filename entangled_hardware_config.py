@@ -1,22 +1,5 @@
 # [1] Thomas, J. M., Yeh, F. I., Chen, J. H., Mambretti, J. J., Kohlert, S. J., Kanter, G. S., & Kumar, P. (2024). Quantum teleportation coexisting with classical communications in optical fiber. Optica, 11(12), 1700-1707.
 
-ent_hardware_params = {
-  # these are the hardware parameters for the ONLY the ENTANGLEMENT distribution link from experiment [1]
-  # setup assumes 2 single photon detectors: d2, d3
-
-  'raman_photons_per_det_window' : 10**5 * 1e-9 * .5, # [photons / det_window]
-  'dark_counts_per_gate' : 50 * 1e-9 ,# [ns]
-  'mean_noise_photons_per_interval_d3' : 0,
-  'detection_eff_d3' : -12.88, # detector 3 detection efficiency [dB],
-  'bob_fibre_loss' : -10.64, # loss from Bob's source to receiver optical elements [dB]
-  'mean_photons_per_pulse_Bob' : .013,
-  'mean_noise_photons_per_pulse_Bob' : .0022,
-  'receiver_transmittance_d3' : -5, # transmittance of optical elements at receiver 3 [dB]
-  'total_transmittance_n3' : .05, # total transmittance from Bob --> d3 [%]
-  'detection_eff_d2' : -6.71, # detector 2 detection efficiency [dB],
-  'total_transmittance_n2' : .09, # total transmittance from Bob --> d2 [%]
-}
-
 tele_hardware_params = {
   # these are the hardware parameters for the full teleportation experiment from [1]
   # setup assumes 4 single photon detectors: d0, d1, d2, d3
