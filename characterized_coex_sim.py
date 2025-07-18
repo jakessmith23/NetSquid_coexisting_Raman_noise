@@ -46,15 +46,17 @@ def calc_raman_photons(P_launch, rho, alpha_np, wavelengths, kpol=2):
                 ram_photons_per_det_window[wl][l].append(photon_count)
     return ram_photons_per_det_window
 
-def simulate(ram_photons_per_det_window, hardware_params):
+def simulate(ram_photons_per_det_window, tele_hardware_params):
     fidelities = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
     for wl in wavelengths:
         for l in fiber_lengths:
             for p in ram_photons_per_det_window[wl][l]:
-                # CONFIGURABLE: if performing teleportation, add Alice's received Raman photons as well
-                hardware_params['alice_fibre_raman_photons_per_det_window'] = 0
-                hardware_params['bob_fibre_raman_photons_per_det_window'] = p
-                visibility, _ = ent.calc_visibility(hardware_params)
+                # CONFIGURABLE: since only distributing entanglement, Alice's channel is not utilized so no Raman photons are generated
+                tele_hardware_params['alice_fibre_raman_photons_per_det_window'] = 0
+                tele_hardware_params['bob_fibre_raman_photons_per_det_window'] = p
+                # CONFIGURABLE: if visibility already know, you may just use that
+                # ReadME: if your hardware setup does not match [1], the calc_visibility() function in import_coexisting_teleportation will need to be modified to model your system
+                visibility, _ = tele.calc_visibility(tele_hardware_params)
                 fidelity, _, _ = ent.run_coex_ent_experiment(
                     bell_state="phi+",
                     noisy_visibility=visibility,
@@ -85,18 +87,17 @@ if __name__ == "__main__":
     raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths)
 
     # CONFIGURABLE: Select which hardware parameters to use to calculate visibility --> fidelity based on your experiment type
-    from entangled_hardware_config import ent_hardware_params  
     from entangled_hardware_config import tele_hardware_params  
 
     
     # Fidelity simulation
     # CONFIGURABLE: pass the correct hardware_params for your type of experiment
-    fidelities = simulate(raman_photons, ent_hardware_params)
+    fidelities = simulate(raman_photons, tele_hardware_params)
 
     colors = ['blue', 'orange', 'green', 'red']
     wavelength_labels = ['1510 nm', '1554 nm', '1563.4 nm', '1566.6 nm']
 
-    # CONFIGURABLE
+    # CONFIGURABLE link length to graph
     link_length_to_graph = 40 # km
     for i, wl in enumerate(wavelengths):
         plt.plot(launch_powers_mW, fidelities[wl][link_length_to_graph], label=wavelength_labels[i], color=colors[i])
