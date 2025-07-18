@@ -6,11 +6,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# Constants
+# Do not change: constants used for link characterization
 DETECTION_WINDOW = 5e-10  # 500 ps
 RBW = 0.5  # OSA Resolution Bandwidth in nm
-FIBER_LENGTHS = [20, 40]  # km
-WAVELENGTHS = [1510, 1554, 1563.4, 1566.6]
+L=20
+KPOL=2
+
 
 # Energy per photon for given wavelength in nm
 get_photon_energy = lambda wl_nm: (1240 / wl_nm) * 1.6e-19
@@ -27,77 +28,83 @@ def read_measurement_data(filename, sheet_name):
         'alpha_np': (data[:, 5] / 10) * np.log10(np.log10(np.exp(1)))  # convert dB/km to np (1/km)
     }
 
-def calculate_rho(P_BW, alpha_np, L, P_in, RBW, kpol=2):
+def calculate_rho(P_BW, alpha_np, P_in, RBW, kpol=2):
     k_Pin = P_in * np.exp(-alpha_np * L)
     k_sinh = np.sinh(alpha_np * L) / alpha_np
     return kpol * (P_BW / k_Pin / k_sinh / RBW)
 
-def calc_raman_photons(P_launch, rho, alpha_np, wavelengths, detection_window, RBW, kpol=2):
-    photons = {wl: {20: [], 40: []} for wl in wavelengths}
+def calc_raman_photons(P_launch, rho, alpha_np, wavelengths, kpol=2):
+    ram_photons_per_det_window = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
     for p in P_launch:
-        for L in FIBER_LENGTHS:
-            k_Pin = p * np.exp(-alpha_np * L)
+        for l in fiber_lengths:
+            k_Pin = p * np.exp(-alpha_np * l)
             for wl in wavelengths:
                 idx = np.where(np.isclose(data['wavelengths'], wl))[0][0]
-                power_fw = k_Pin[idx] * kpol * L * rho[idx] * RBW * 1e-3  # W
+                power_fw = k_Pin[idx] * KPOL * l * rho[idx] * RBW * 1e-3  # W
                 energy_photon = get_photon_energy(wl)
-                photon_count = (power_fw / energy_photon) * detection_window
-                photons[wl][L].append(photon_count)
-    return photons
+                photon_count = (power_fw / energy_photon) * DETECTION_WINDOW
+                ram_photons_per_det_window[wl][l].append(photon_count)
+    return ram_photons_per_det_window
 
-def simulate_entanglement_distr(photons, hardware_params):
-    fidelities = {wl: {20: [], 40: []} for wl in WAVELENGTHS}
-    for wl in WAVELENGTHS:
-        for L in FIBER_LENGTHS:
-            for p in photons[wl][L]:
+def simulate(ram_photons_per_det_window, hardware_params):
+    fidelities = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
+    for wl in wavelengths:
+        for l in fiber_lengths:
+            for p in ram_photons_per_det_window[wl][l]:
+                # CONFIGURABLE: if performing teleportation, add Alice's received Raman photons as well
                 hardware_params['alice_fibre_raman_photons_per_det_window'] = 0
                 hardware_params['bob_fibre_raman_photons_per_det_window'] = p
-                visibility, _ = tele.calc_visibility(hardware_params)
+                visibility, _ = ent.calc_visibility(hardware_params)
                 fidelity, _, _ = ent.run_coex_ent_experiment(
-                    random_seed=1,
                     bell_state="phi+",
                     noisy_visibility=visibility,
                     verbose=False
                 )
-                fidelities[wl][L].append(fidelity)
+                fidelities[wl][l].append(fidelity)
     return fidelities
 
 if __name__ == "__main__":
     # Load data
     data = read_measurement_data('RAMAN_Charact.xlsx', 'Meas_1565_HP_DP')
 
+    # CONFIGURABLE: select your lengths and wavelengths of choice
+    fiber_lengths = [10, 20, 40]  # km
+    wavelengths = [1510, 1554, 1563.4, 1566.6]
+
     # Use max input power to estimate rho
     max_power = np.max(data['P_TX'])
     rho = calculate_rho(
         data['P_BW'],
         data['alpha_np'],
-        L=20,
         P_in=max_power,
         RBW=RBW
     )
 
     # Raman photon calculation
     launch_powers_mW = np.linspace(0, 10, 100)
-    raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], WAVELENGTHS, DETECTION_WINDOW, RBW)
+    raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths)
 
-    # Hardware parameters (defined elsewhere in full code)
-    from entangled_hardware_config import hardware_params  
+    # CONFIGURABLE: Select which hardware parameters to use to calculate visibility --> fidelity based on your experiment type
+    from hardware_config import ent_hardware_params  
+    from hardware_config import tele_hardware_params  
+
     
-
     # Fidelity simulation
-    fidelities = simulate_entanglement_distr(raman_photons, hardware_params)
+    # CONFIGURABLE: pass the correct hardware_params for your type of experiment
+    fidelities = simulate(raman_photons, ent_hardware_params)
 
     colors = ['blue', 'orange', 'green', 'red']
     wavelength_labels = ['1510 nm', '1554 nm', '1563.4 nm', '1566.6 nm']
 
-    for i, wl in enumerate(WAVELENGTHS):
-        plt.plot(launch_powers_mW, fidelities[wl][20], label=wavelength_labels[i], color=colors[i])
-        plt.plot(launch_powers_mW, fidelities[wl][40], linestyle='dashed', color=colors[i])
+    # CONFIGURABLE
+    link_length_to_graph = 40 # km
+    for i, wl in enumerate(wavelengths):
+        plt.plot(launch_powers_mW, fidelities[wl][link_length_to_graph], label=wavelength_labels[i], color=colors[i])
 
     plt.axvline(x=0.25, color='black', linestyle=':', linewidth=1.5)
     plt.xlabel("Launch Power (mW)")
     plt.ylabel("Fidelity")
-    plt.title("Coexisting Entanglement Fidelity vs Launch Power")
+    plt.title(f"Coexisting Entanglement Fidelity vs Launch Power at 40 km")
     plt.legend(title="Wavelength")
     plt.grid(True)
     plt.show()
