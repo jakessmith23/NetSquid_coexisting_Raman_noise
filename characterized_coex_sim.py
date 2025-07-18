@@ -85,8 +85,8 @@ if __name__ == "__main__":
     raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths)
 
     # CONFIGURABLE: Select which hardware parameters to use to calculate visibility --> fidelity based on your experiment type
-    from hardware_config import ent_hardware_params  
-    from hardware_config import tele_hardware_params  
+    from entangled_hardware_config import ent_hardware_params  
+    from entangled_hardware_config import tele_hardware_params  
 
     
     # Fidelity simulation
