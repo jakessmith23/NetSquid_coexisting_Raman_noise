@@ -83,12 +83,12 @@ if __name__ == "__main__":
     wavelengths = [1510, 1554, 1563.4, 1566.6]
 
     launch_powers_mW = np.linspace(0, 10, 100)
-    raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths, fiber_lengths)
+    ram_photons_per_det_window = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths, fiber_lengths)
 
     for wl in wavelengths:
         for l in fiber_lengths:
             # to access raman photon counts for a certain wavelenth at a certain length 
-            print(raman_photons[wl][l])
+            print(ram_photons_per_det_window[wl][l])
 
     # CONFIGURABLE: Select which hardware parameters to use to calculate visibility --> fidelity based on your experiment type
     from entangled_hardware_config import tele_hardware_params  
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     
     # Fidelity simulation
     # CONFIGURABLE: pass the correct hardware_params for your type of experiment
-    fidelities = simulate(raman_photons, tele_hardware_params, fiber_lengths, wavelengths)
+    fidelities = simulate(ram_photons_per_det_window, tele_hardware_params, fiber_lengths, wavelengths)
 
     colors = ['blue', 'orange', 'green', 'red']
     wavelength_labels = ['1510 nm', '1554 nm', '1563.4 nm', '1566.6 nm']
