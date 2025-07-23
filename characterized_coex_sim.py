@@ -33,7 +33,7 @@ def calculate_rho(P_BW, alpha_np, P_in, RBW, kpol=2):
     k_sinh = np.sinh(alpha_np * L) / alpha_np
     return kpol * (P_BW / k_Pin / k_sinh / RBW)
 
-def calc_raman_photons(P_launch, rho, alpha_np, wavelengths, kpol=2):
+def calc_raman_photons(P_launch, rho, alpha_np, wavelengths, fiber_lengths, kpol=2):
     ram_photons_per_det_window = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
     for p in P_launch:
         for l in fiber_lengths:
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     wavelengths = [1510, 1554, 1563.4, 1566.6]
 
     launch_powers_mW = np.linspace(0, 10, 100)
-    raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths)
+    raman_photons = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths, fiber_lengths)
 
     for wl in wavelengths:
         for l in fiber_lengths:
