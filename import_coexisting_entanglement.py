@@ -142,7 +142,7 @@ def get_dep_prob_from_v(noisy_visibility):
   depolarized_fidelity = (1 + 3 * noisy_visibility) / 4
   depolar_prob = 1 - depolarized_fidelity
 
-  return depolar_prob
+  return (4/3) * depolar_prob
 
 
 def run_coex_ent_experiment(noisy_visibility, random_seed = 1, bell_state="phi+", verbose=True):
@@ -185,4 +185,4 @@ def run_coex_ent_experiment(noisy_visibility, random_seed = 1, bell_state="phi+"
         print("final f_ent:", f_ent)
         print("depolar_prob:", depolar_prob)
 
-    return f_ent, noisy_output_1, noisy_output_2
+    return f_ent, noisy_output_1, noisy_output_2, depolar_prob
