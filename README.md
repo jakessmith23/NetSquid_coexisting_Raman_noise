@@ -14,12 +14,10 @@ The main entry point is:
 
 Raman gain is estimated from experimental measurements, with data available in *RAMAN_Charact.xlsx*.
 
-This script allows the user to run 3 types of coexistence experiments:
-Direct Transmission (*import_coexisting_direct_transmission*)
+This script allows the user to run 1 types of coexistence experiments:
 Entanglement Distribution (*import_coexisting_entanglement*)
-Teleportation (*import_coexisting_teleportation*)
 
-Both simulate how Raman noise, modeled as depolarization, affects a pure quantum state's fidelity, based on input visibility values. There are also support functions for analytically estimating a hardware setup's visibility from input hardware parameters.
+Raman noise is modeled as depolarization, affecting a pure quantum state's fidelity, based on input visibility values. There are also support functions for analytically estimating a hardware setup's visibility from input hardware parameters.
 
 
 
