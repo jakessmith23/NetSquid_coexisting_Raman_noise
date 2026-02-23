@@ -24,7 +24,6 @@ Both simulate how Raman noise, modeled as depolarization, affects a pure quantum
 
 
 ## Citations
-1. Smith, J., & Proietti, R. Simulating Raman Scattering Impairments with Depolarization Noise in Quantum-Classical Links. Photonics in Switching and Computing (2025). To Appear.
-
+1. J. Smith and R. Proietti, "Simulating Raman Scattering Impairments with Depolarization Noise in Quantum-Classical Links," 2025 30th OptoElectronics and Communications Conference (OECC) and 2025 International Conference on Photonics in Switching and Computing (PSC), Sapporo, Japan, 2025, pp. 1-4.
 2. Thomas, J. M., Yeh, F. I., Chen, J. H., Mambretti, J. J., Kohlert, S. J., Kanter, G. S., & Kumar, P. (2024). Quantum teleportation coexisting with classical communications in optical fiber. Optica, 11(12), 1700-1707.
 
