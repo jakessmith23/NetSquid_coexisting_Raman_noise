@@ -186,20 +186,40 @@ def calculate_rho(P_BW, alpha_np, P_in, RBW):
     k_sinh = np.sinh(alpha_np * L) / alpha_np
     return KPOL * (P_BW / k_Pin / k_sinh / RBW)
 
+NP_PER_DB = np.log(10) / 10          # ≈ 0.2302585 Np per dB
+DB_PER_NP = 10 / np.log(10)          # ≈ 4.3429448 dB per Np
+DB_PER_KM = 0.2
+
 def calc_raman_photons(P_launch, rho, alpha_np, wavelengths, fiber_lengths, detection_window):
     ram_photons_per_det_window = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
-    for p in P_launch:
-        for l in fiber_lengths:
-            k_Pin = p * np.exp(-alpha_np * l)
+
+    for p_mW in P_launch:
+        p_W = p_mW * 1e-3  # convert mW -> W once
+
+        for L_km in fiber_lengths:
             for wl in wavelengths:
                 idx = np.where(np.isclose(data['wavelengths'], wl))[0][0]
-                power_fw = k_Pin[idx] * KPOL * l * rho[idx] * RBW * 1e-3  # W
-                energy_photon = get_photon_energy(wl)
+
+                #alpha = alpha_np[idx]  # Np/km (power attenuation)
+                alpha = 0.2 * log(10) / 10 # 1 / km
+                
+                L_eff = (1 - np.exp(-alpha * L_km)) / alpha
+
+
+                # Receiver Raman power (W)
+                power_fw = p_W * KPOL * rho[idx] * RBW * L_eff
+
+                energy_photon = get_photon_energy(wl)  # J
                 photon_count = (power_fw / energy_photon) * detection_window
-                ram_photons_per_det_window[wl][l].append(photon_count)
+
+                ram_photons_per_det_window[wl][L_km].append(photon_count)
+
     return ram_photons_per_det_window
 
-def simulate(ram_photons_per_det_window, hardware_params, fiber_lengths, wavelengths):
+
+
+
+def simulate(ram_photons_per_det_window, hardware_params, fiber_lengths, wavelengths, alpha_np, wavelengths_np):
     fidelities = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
     ns_fidelities = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
     p_mix = {wl: {L: [] for L in fiber_lengths} for wl in wavelengths}
@@ -208,13 +228,16 @@ def simulate(ram_photons_per_det_window, hardware_params, fiber_lengths, wavelen
     for wl in wavelengths:
         for l in fiber_lengths:
             for p in ram_photons_per_det_window[wl][l]:
+                idx = np.where(np.isclose(wavelengths_np, wl))[0][0]
+
                 # CONFIGURABLE: since only distributing entanglement, Alice's channel is not utilized so no Raman photons are generated
                 hardware_params['raman_photons_per_det_window'] = p
                 hardware_params['coexisting_fibre_loss'] = hardware_params['fibre_attenuation'] * l
-                print(f"Link length: {l} km. Fibre loss: {hardware_params['coexisting_fibre_loss']} dB")
+                print(f"Link length: {l} km. , Fibre loss: {hardware_params['coexisting_fibre_loss']} dB")
 
                 # CONFIGURABLE: if visibility already know, you may just use that
                 # ReadME: if your hardware setup does not match the configuration file, the calc_visibility() function will need to be modified to model your system
+                
                 visibility = calc_visibility(hardware_params)
 
                 fidelity, _, _, depolar_prob = ent.run_coex_ent_experiment(
@@ -222,15 +245,17 @@ def simulate(ram_photons_per_det_window, hardware_params, fiber_lengths, wavelen
                     noisy_visibility=visibility,
                     verbose=False
                 )
+
                 fidelities[wl][l].append((1 + 3*visibility) / 4)
                 ns_fidelities[wl][l].append(fidelity)
-
-
+    
     return fidelities, ns_fidelities
+
 
 if __name__ == "__main__":
     # Load data
     data = read_measurement_data('RAMAN_Charact.xlsx', 'Meas_1565_HP_DP')
+    
     # Use max input power to estimate rho
     max_power = np.max(data['P_TX'])
     rho = calculate_rho(
@@ -242,7 +267,7 @@ if __name__ == "__main__":
 
     # Raman photon calculation
      # CONFIGURABLE: select your lengths and wavelengths of choice
-    fiber_lengths = [50]  # km
+    fiber_lengths = [5, 50]  # km
     wavelengths = [1510, 1554, 1563.4, 1566.6, 1580]
 
     # CONFIGURABLE: Select which hardware parameters to use to calculate visibility --> fidelity based on your experiment type
@@ -251,25 +276,33 @@ if __name__ == "__main__":
 
     launch_powers_mW = np.linspace(0, 10, 100)
     ram_photons_per_det_window = calc_raman_photons(launch_powers_mW, rho, data['alpha_np'], wavelengths, fiber_lengths, hardware_params['detection_window'])
-
     
     # Fidelity simulation
     # CONFIGURABLE: pass the correct hardware_params for your type of experiment
-    fidelities, ns_fidelities = simulate(ram_photons_per_det_window, hardware_params, fiber_lengths, wavelengths)
+    fidelities, ns_fidelities = simulate(ram_photons_per_det_window, hardware_params, fiber_lengths, wavelengths, data['alpha_np'], data['wavelengths'])
 
     colors = ['blue', 'orange', 'green', 'red', 'purple']
     wavelength_labels = ['1510 nm', '1554 nm', '1563.4 nm', '1566.6 nm', '1580 nm']
 
+    #for i, wl in enumerate(wavelengths):
+    #    for l in fiber_lengths: 
+    #        plt.plot(launch_powers_mW, ns_fidelities[wl][l], label=wl, color=colors[i])
+
     # CONFIGURABLE link length to graph
-    link_length_to_graph = fiber_lengths[-1] # km
     for i, wl in enumerate(wavelengths):
-        plt.plot(launch_powers_mW, ns_fidelities[wl][link_length_to_graph], label=wl, color=colors[i])
+        for l in fiber_lengths: 
+            if l == 5:
+                plt.plot(launch_powers_mW, ns_fidelities[wl][l], label=wl, color=colors[i])
+            if l == 50:
+                plt.plot(launch_powers_mW, ns_fidelities[wl][l], label=wl, color=colors[i], linestyle='dashed')
+
     
     plt.axhline(y=0.25, linestyle="dotted", color="black")  
     plt.ylim(0.2, 1)
-    plt.xlabel("Launch Power (mW)")
-    plt.ylabel("Fidelity")
-    plt.title(f"Coexisting Entanglement Fidelity at {link_length_to_graph} km")
+    plt.xlabel(r"Launch Power [mW]")
+    plt.ylabel(r"$F'$")
+    plt.title(r"(a) Coexisting Fidelity for a 20 km Link")
+    #plt.title(r"(b) Coexisting Fidelity for 5 km MAN Link")
     plt.legend(title="Wavelength [nm]")
     plt.grid(True)
     plt.show()
